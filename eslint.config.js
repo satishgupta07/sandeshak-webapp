@@ -22,4 +22,12 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  // shadcn/ui components co-locate component + variants (cva) by convention.
+  // The fast-refresh "components only" rule isn't useful here.
+  {
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])
