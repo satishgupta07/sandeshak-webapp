@@ -15,11 +15,17 @@ function displayAvatar(conv: ConversationDTO, currentUserId: string | undefined)
   return conv.participants.find((p) => p.userId !== currentUserId)?.user.avatarUrl ?? null
 }
 
+function otherUserId(conv: ConversationDTO, currentUserId: string | undefined): string | null {
+  if (conv.type === 'group') return null
+  return conv.participants.find((p) => p.userId !== currentUserId)?.userId ?? null
+}
+
 export default function ConversationList() {
   const conversations = useChatStore((s) => s.conversations)
   const activeId = useChatStore((s) => s.activeConversationId)
   const setActive = useChatStore((s) => s.setActiveConversation)
   const setConversations = useChatStore((s) => s.setConversations)
+  const presence = useChatStore((s) => s.presence)
   const currentUserId = useAuthStore((s) => s.user?.id)
 
   // Initial state covers "before the fetch resolves"; the effect doesn't need
@@ -63,6 +69,8 @@ export default function ConversationList() {
         const avatar = displayAvatar(conv, currentUserId)
         const isActive = conv.id === activeId
         const preview = conv.lastMessage?.content ?? '—'
+        const otherId = otherUserId(conv, currentUserId)
+        const isOnline = otherId ? (presence[otherId]?.isOnline ?? false) : false
         return (
           <li key={conv.id}>
             <button
@@ -72,17 +80,21 @@ export default function ConversationList() {
                 isActive ? 'bg-blue-50' : ''
               }`}
             >
-              {avatar ? (
-                <img
-                  src={avatar}
-                  alt={name}
-                  className="h-10 w-10 shrink-0 rounded-full object-cover"
-                />
-              ) : (
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-200 text-sm font-medium text-gray-600">
-                  {name.charAt(0).toUpperCase()}
-                </span>
-              )}
+              <span className="relative shrink-0">
+                {avatar ? (
+                  <img src={avatar} alt={name} className="h-10 w-10 rounded-full object-cover" />
+                ) : (
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-sm font-medium text-gray-600">
+                    {name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                {isOnline && (
+                  <span
+                    aria-label="online"
+                    className="absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 border-white bg-green-500"
+                  />
+                )}
+              </span>
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-medium text-gray-900">{name}</span>
                 <span className="truncate text-xs text-gray-500">{preview}</span>
