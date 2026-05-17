@@ -1,13 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom'
+import ChatWindow from '../components/ChatWindow'
+import ConversationList from '../components/ConversationList'
 import UserSearch from '../components/UserSearch'
+import { useChatSocket } from '../hooks/useChatSocket'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
+import { useChatStore } from '../store/chat'
 
 export default function ChatPage() {
   const user = useAuthStore((s) => s.user)
   const refreshToken = useAuthStore((s) => s.refreshToken)
-  const clear = useAuthStore((s) => s.clear)
+  const clearAuth = useAuthStore((s) => s.clear)
+  const clearChat = useChatStore((s) => s.clear)
   const navigate = useNavigate()
+
+  useChatSocket()
 
   async function onLogout() {
     if (refreshToken) {
@@ -19,7 +26,8 @@ export default function ChatPage() {
         // ignore
       })
     }
-    clear()
+    clearChat()
+    clearAuth()
     navigate('/login', { replace: true })
   }
 
@@ -34,7 +42,7 @@ export default function ChatPage() {
         </div>
       )}
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 overflow-hidden">
         <aside className="flex w-80 flex-col border-r border-gray-200 bg-white">
           <div className="flex items-center justify-between border-b border-gray-100 p-4">
             <Link
@@ -63,12 +71,10 @@ export default function ChatPage() {
             </button>
           </div>
           <UserSearch />
-          <p className="p-4 text-sm text-gray-400">Conversations</p>
+          <ConversationList />
         </aside>
 
-        <main className="flex flex-1 items-center justify-center bg-gray-50">
-          <p className="text-gray-400">Select a conversation</p>
-        </main>
+        <ChatWindow />
       </div>
     </div>
   )

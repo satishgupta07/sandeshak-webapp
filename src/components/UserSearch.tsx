@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ApiError, api } from '../lib/api'
-import type { PaginatedResponse, UserDTO } from '../types'
+import { useChatStore } from '../store/chat'
+import type { ApiResponse, ConversationDTO, PaginatedResponse, UserDTO } from '../types'
 
 const LIMIT = 20
 
@@ -13,6 +14,8 @@ export default function UserSearch() {
   const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [startingId, setStartingId] = useState<string | null>(null)
+  const [startError, setStartError] = useState<string | null>(null)
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query.trim()), 300)
@@ -58,6 +61,25 @@ export default function UserSearch() {
       cancelled = true
     }
   }, [debouncedQuery])
+
+  async function onStartConversation(user: UserDTO) {
+    if (startingId) return
+    setStartError(null)
+    setStartingId(user.id)
+    try {
+      const res = await api<ApiResponse<ConversationDTO>>('/conversations', {
+        method: 'POST',
+        body: JSON.stringify({ participantId: user.id }),
+      })
+      useChatStore.getState().upsertConversation(res.data)
+      useChatStore.getState().setActiveConversation(res.data.id)
+      setQuery('')
+    } catch (err) {
+      setStartError(err instanceof ApiError ? err.message : 'Network error')
+    } finally {
+      setStartingId(null)
+    }
+  }
 
   async function onLoadMore() {
     if (!debouncedQuery || loading || !hasMore) return
@@ -115,8 +137,9 @@ export default function UserSearch() {
                   <li key={u.id}>
                     <button
                       type="button"
-                      title="Start a chat — coming soon"
-                      className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left hover:bg-gray-50"
+                      onClick={() => onStartConversation(u)}
+                      disabled={startingId !== null}
+                      className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left hover:bg-gray-50 disabled:opacity-50"
                     >
                       {u.avatarUrl ? (
                         <img
@@ -133,6 +156,9 @@ export default function UserSearch() {
                         <span className="truncate text-sm font-medium text-gray-900">{u.name}</span>
                         <span className="truncate text-xs text-gray-500">{u.email}</span>
                       </span>
+                      {startingId === u.id && (
+                        <span className="ml-2 text-xs text-gray-400">Starting…</span>
+                      )}
                     </button>
                   </li>
                 ))}
@@ -148,6 +174,7 @@ export default function UserSearch() {
                   {loading ? 'Loading…' : 'Load more'}
                 </button>
               )}
+              {startError && <p className="mt-2 text-sm text-red-600">{startError}</p>}
             </>
           )}
         </div>
