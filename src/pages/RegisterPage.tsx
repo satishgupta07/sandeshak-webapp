@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -20,6 +21,10 @@ export default function RegisterPage() {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
     setSubmitting(true)
     try {
       const body: RegisterRequest = { name, email, password }
@@ -74,6 +79,20 @@ export default function RegisterPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={8}
+            maxLength={128}
+            autoComplete="new-password"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          />
+        </label>
+
+        <label className="mt-4 block text-sm font-medium text-gray-700">
+          Confirm password
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             required
             minLength={8}
             maxLength={128}

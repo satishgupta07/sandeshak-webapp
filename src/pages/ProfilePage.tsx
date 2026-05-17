@@ -20,6 +20,7 @@ export default function ProfilePage() {
 
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [removingAvatar, setRemovingAvatar] = useState(false)
 
   const [verifyMessage, setVerifyMessage] = useState<string | null>(null)
   const [verifySending, setVerifySending] = useState(false)
@@ -41,6 +42,22 @@ export default function ProfilePage() {
       setProfileError(err instanceof ApiError ? err.message : 'Network error')
     } finally {
       setSavingProfile(false)
+    }
+  }
+
+  async function onRemoveAvatar() {
+    setUploadError(null)
+    setRemovingAvatar(true)
+    try {
+      const res = await api<ApiResponse<UserDTO>>('/users/me', {
+        method: 'PATCH',
+        body: JSON.stringify({ avatarUrl: null }),
+      })
+      setUser(res.data)
+    } catch (err) {
+      setUploadError(err instanceof ApiError ? err.message : 'Network error')
+    } finally {
+      setRemovingAvatar(false)
     }
   }
 
@@ -138,16 +155,32 @@ export default function ProfilePage() {
                 </div>
               )}
             </div>
-            <label className="cursor-pointer rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-              {uploading ? 'Uploading…' : 'Change photo'}
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={onAvatarChange}
-                disabled={uploading}
-                className="hidden"
-              />
-            </label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <label
+                className={`cursor-pointer rounded-md border border-gray-300 bg-white px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 ${
+                  uploading || removingAvatar ? 'pointer-events-none opacity-50' : ''
+                }`}
+              >
+                {uploading ? 'Uploading…' : 'Change photo'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={onAvatarChange}
+                  disabled={uploading || removingAvatar}
+                  className="hidden"
+                />
+              </label>
+              {user.avatarUrl && (
+                <button
+                  type="button"
+                  onClick={onRemoveAvatar}
+                  disabled={uploading || removingAvatar}
+                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                >
+                  {removingAvatar ? 'Removing…' : 'Remove photo'}
+                </button>
+              )}
+            </div>
           </div>
           {uploadError && <p className="mt-3 text-sm text-red-600">{uploadError}</p>}
         </div>
