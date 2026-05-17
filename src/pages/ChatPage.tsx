@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import UserSearch from '../components/UserSearch'
 import { api } from '../lib/api'
 import { useAuthStore } from '../store/auth'
 
@@ -61,6 +62,7 @@ export default function ChatPage() {
               Log out
             </button>
           </div>
+          <UserSearch />
           <p className="p-4 text-sm text-gray-400">Conversations</p>
         </aside>
 
