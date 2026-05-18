@@ -1,7 +1,12 @@
 import { useAuthStore } from '../store/auth'
+import { markSlowAfter } from '../store/serverStatus'
 import type { ApiResponse, AuthTokens } from '../types'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1'
+
+// Server origin (strip the /api/v1 suffix) — used for /health which is
+// mounted at the root of the Express app, not under the API prefix.
+export const API_ORIGIN = API_URL.replace(/\/api\/v\d+\/?$/, '')
 
 export class ApiError extends Error {
   status: number
@@ -60,23 +65,32 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     finalHeaders.set('Authorization', `Bearer ${accessToken}`)
   }
 
-  let response = await fetch(`${API_URL}${path}`, { ...rest, headers: finalHeaders })
+  // If the request takes longer than 3s we surface a banner via the
+  // server-status store. `clear` cancels the pending mark on completion
+  // and decrements the counter if it already fired.
+  const clearSlowMark = markSlowAfter(3000)
 
-  if (response.status === 401 && !skipAuth) {
-    const newToken = await tryRefresh()
-    if (newToken) {
-      finalHeaders.set('Authorization', `Bearer ${newToken}`)
-      response = await fetch(`${API_URL}${path}`, { ...rest, headers: finalHeaders })
-    } else {
-      useAuthStore.getState().clear()
+  try {
+    let response = await fetch(`${API_URL}${path}`, { ...rest, headers: finalHeaders })
+
+    if (response.status === 401 && !skipAuth) {
+      const newToken = await tryRefresh()
+      if (newToken) {
+        finalHeaders.set('Authorization', `Bearer ${newToken}`)
+        response = await fetch(`${API_URL}${path}`, { ...rest, headers: finalHeaders })
+      } else {
+        useAuthStore.getState().clear()
+      }
     }
-  }
 
-  if (!response.ok) {
-    const errBody = (await response.json().catch(() => null)) as { error?: string } | null
-    throw new ApiError(response.status, errBody?.error ?? response.statusText)
-  }
+    if (!response.ok) {
+      const errBody = (await response.json().catch(() => null)) as { error?: string } | null
+      throw new ApiError(response.status, errBody?.error ?? response.statusText)
+    }
 
-  if (response.status === 204) return undefined as T
-  return (await response.json()) as T
+    if (response.status === 204) return undefined as T
+    return (await response.json()) as T
+  } finally {
+    clearSlowMark()
+  }
 }
