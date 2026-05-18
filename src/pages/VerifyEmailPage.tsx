@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import AuthShell, { authPrimaryButtonClass } from '../components/AuthShell'
 import { ApiError, api } from '../lib/api'
 import { selectIsAuthenticated, useAuthStore } from '../store/auth'
 import type { ApiResponse, UserDTO } from '../types'
@@ -29,9 +30,6 @@ export default function VerifyEmailPage() {
       .then((res) => {
         if (cancelled) return
         setStatus('success')
-        // Only update the store if the currently signed-in user is the
-        // one being verified — prevents a forwarded link from clobbering
-        // someone else's session.
         if (currentUser && currentUser.id === res.data.id) {
           setUser(res.data)
         }
@@ -44,46 +42,76 @@ export default function VerifyEmailPage() {
     return () => {
       cancelled = true
     }
-    // Run once on mount; the token is fixed for this page load.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  if (status === 'pending') {
+    return (
+      <AuthShell title="Verifying…" subtitle="Please wait a moment.">
+        <div className="flex justify-center py-2">
+          <span className="h-10 w-10 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+        </div>
+      </AuthShell>
+    )
+  }
+
+  if (status === 'success') {
+    return (
+      <AuthShell title="Email verified" subtitle="Your email has been confirmed. You're all set.">
+        <div className="flex flex-col items-center gap-4 py-2">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-success/15 text-success">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-7 w-7"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+          <Link to={isAuthenticated ? '/' : '/login'} className={authPrimaryButtonClass}>
+            {isAuthenticated ? 'Continue to chat' : 'Sign in'}
+          </Link>
+        </div>
+      </AuthShell>
+    )
+  }
+
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-sm">
-        {status === 'pending' && (
-          <>
-            <h1 className="text-2xl font-bold text-gray-900">Verifying…</h1>
-            <p className="mt-2 text-sm text-gray-500">Please wait a moment.</p>
-          </>
-        )}
-        {status === 'success' && (
-          <>
-            <h1 className="text-2xl font-bold text-gray-900">Email verified</h1>
-            <p className="mt-2 text-sm text-gray-500">
-              Your email has been confirmed. You&apos;re all set.
-            </p>
-            <Link
-              to={isAuthenticated ? '/' : '/login'}
-              className="mt-6 inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              {isAuthenticated ? 'Continue to chat' : 'Sign in'}
-            </Link>
-          </>
-        )}
-        {status === 'error' && (
-          <>
-            <h1 className="text-2xl font-bold text-gray-900">Verification failed</h1>
-            <p className="mt-2 text-sm text-red-600">{errorMessage}</p>
-            <Link
-              to={isAuthenticated ? '/profile' : '/login'}
-              className="mt-6 inline-block text-sm text-blue-600 hover:underline"
-            >
-              {isAuthenticated ? 'Resend from profile' : 'Back to sign in'}
-            </Link>
-          </>
-        )}
+    <AuthShell
+      title="Verification failed"
+      subtitle={errorMessage ?? undefined}
+      footer={
+        <Link
+          to={isAuthenticated ? '/profile' : '/login'}
+          className="font-medium text-primary hover:underline"
+        >
+          {isAuthenticated ? 'Resend from profile' : 'Back to sign in'}
+        </Link>
+      }
+    >
+      <div className="flex justify-center py-2">
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/15 text-destructive">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-7 w-7"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </span>
       </div>
-    </div>
+    </AuthShell>
   )
 }

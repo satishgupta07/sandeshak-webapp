@@ -6,6 +6,12 @@ import { uploadFile } from '../lib/upload'
 import { useAuthStore } from '../store/auth'
 import type { ApiResponse, UpdateProfileRequest, UserDTO } from '../types'
 
+const inputClass =
+  'block w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition focus:border-primary/60 focus:ring-2 focus:ring-primary/25 focus:outline-none'
+
+const fieldLabelClass =
+  'mb-1.5 block text-xs font-medium tracking-wide text-muted-foreground uppercase'
+
 export default function ProfilePage() {
   const user = useAuthStore((s) => s.user)
   const refreshToken = useAuthStore((s) => s.refreshToken)
@@ -77,7 +83,6 @@ export default function ProfilePage() {
       setUploadError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
       setUploading(false)
-      // Reset the input so picking the same file again retriggers onChange
       e.target.value = ''
     }
   }
@@ -114,50 +119,109 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="mx-auto max-w-xl px-4">
-        <div className="mb-4 flex items-center justify-between">
-          <Link to="/" className="text-sm text-blue-600 hover:underline">
-            ← Back to chat
+    <div className="min-h-[100dvh] bg-background py-6 sm:py-10">
+      <div className="mx-auto max-w-2xl px-4">
+        <div className="mb-6 flex items-center justify-between">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-surface-hover hover:text-foreground"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Back to chat
           </Link>
-          <button type="button" onClick={onLogout} className="text-sm text-red-600 hover:underline">
+          <button
+            type="button"
+            onClick={onLogout}
+            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-destructive transition hover:bg-destructive/10"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
             Log out
           </button>
         </div>
 
+        <h1 className="mb-1 text-2xl font-bold tracking-tight text-foreground">Profile</h1>
+        <p className="mb-6 text-sm text-muted-foreground">
+          Manage how others see you on Sandeshak.
+        </p>
+
         {!user.isVerified && (
-          <div className="mb-6 rounded-md border border-yellow-200 bg-yellow-50 px-4 py-3">
-            <p className="text-sm text-yellow-900">
-              Your email is unverified. Some features may be limited.
-            </p>
-            <button
-              type="button"
-              onClick={onResendVerify}
-              disabled={verifySending}
-              className="mt-2 text-sm font-medium text-yellow-900 underline disabled:opacity-50"
-            >
-              {verifySending ? 'Sending…' : 'Send verification email'}
-            </button>
-            {verifyMessage && <p className="mt-2 text-sm text-yellow-900">{verifyMessage}</p>}
+          <div className="mb-6 rounded-2xl border border-warning/30 bg-warning/10 p-4">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-warning/20 text-warning">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4"
+                >
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </span>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-warning">Email not verified</p>
+                <p className="mt-0.5 text-xs text-warning/90">
+                  Some features may be limited until you verify your email.
+                </p>
+                <button
+                  type="button"
+                  onClick={onResendVerify}
+                  disabled={verifySending}
+                  className="mt-2 text-xs font-semibold text-warning underline underline-offset-2 disabled:opacity-50"
+                >
+                  {verifySending ? 'Sending…' : 'Send verification email'}
+                </button>
+                {verifyMessage && <p className="mt-2 text-xs text-warning/90">{verifyMessage}</p>}
+              </div>
+            </div>
           </div>
         )}
 
         {/* Avatar */}
-        <div className="rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="text-sm font-medium text-gray-700">Profile photo</h2>
-          <div className="mt-4 flex items-center gap-4">
-            <div className="h-20 w-20 overflow-hidden rounded-full bg-gray-200">
+        <section className="rounded-2xl border border-border bg-surface p-5 sm:p-6">
+          <h2 className="text-sm font-semibold text-foreground">Profile photo</h2>
+          <div className="mt-4 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+            <div className="h-20 w-20 overflow-hidden rounded-full ring-2 ring-border">
               {user.avatarUrl ? (
                 <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-2xl font-medium text-gray-500">
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-primary-hover text-2xl font-semibold text-primary-foreground">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
               <label
-                className={`cursor-pointer rounded-md border border-gray-300 bg-white px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 ${
+                className={`cursor-pointer rounded-xl border border-border bg-surface-2 px-4 py-2 text-center text-sm font-medium text-foreground transition hover:bg-surface-hover ${
                   uploading || removingAvatar ? 'pointer-events-none opacity-50' : ''
                 }`}
               >
@@ -175,60 +239,72 @@ export default function ProfilePage() {
                   type="button"
                   onClick={onRemoveAvatar}
                   disabled={uploading || removingAvatar}
-                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  className="rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-medium text-destructive transition hover:bg-destructive/10 disabled:opacity-50"
                 >
                   {removingAvatar ? 'Removing…' : 'Remove photo'}
                 </button>
               )}
             </div>
           </div>
-          {uploadError && <p className="mt-3 text-sm text-red-600">{uploadError}</p>}
-        </div>
+          {uploadError && <p className="mt-3 text-sm text-destructive">{uploadError}</p>}
+        </section>
 
         {/* Profile fields */}
-        <form onSubmit={onSaveProfile} className="mt-6 rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="text-sm font-medium text-gray-700">About you</h2>
+        <form
+          onSubmit={onSaveProfile}
+          className="mt-5 rounded-2xl border border-border bg-surface p-5 sm:p-6"
+        >
+          <h2 className="text-sm font-semibold text-foreground">About you</h2>
 
-          <label className="mt-4 block text-sm font-medium text-gray-700">
-            Name
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              maxLength={100}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            />
-          </label>
+          <div className="mt-4 space-y-4">
+            <label className="block">
+              <span className={fieldLabelClass}>Name</span>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                maxLength={100}
+                className={inputClass}
+              />
+            </label>
 
-          <label className="mt-4 block text-sm font-medium text-gray-700">
-            Email
-            <input
-              type="email"
-              value={user.email}
-              disabled
-              className="mt-1 block w-full cursor-not-allowed rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500"
-            />
-          </label>
+            <label className="block">
+              <span className={fieldLabelClass}>Email</span>
+              <input
+                type="email"
+                value={user.email}
+                disabled
+                className="block w-full cursor-not-allowed rounded-xl border border-border bg-surface-2 px-3.5 py-2.5 text-sm text-muted-foreground"
+              />
+            </label>
 
-          <label className="mt-4 block text-sm font-medium text-gray-700">
-            Bio
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              maxLength={139}
-              rows={3}
-              className="mt-1 block w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            />
-            <span className="mt-1 block text-xs text-gray-400">{bio.length}/139</span>
-          </label>
+            <label className="block">
+              <span className={fieldLabelClass}>Bio</span>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                maxLength={139}
+                rows={3}
+                placeholder="Say something about yourself…"
+                className={`${inputClass} resize-none`}
+              />
+              <span className="mt-1 block text-right text-[11px] text-muted-foreground">
+                {bio.length}/139
+              </span>
+            </label>
+          </div>
 
-          {profileError && <p className="mt-4 text-sm text-red-600">{profileError}</p>}
+          {profileError && (
+            <div className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {profileError}
+            </div>
+          )}
 
           <button
             type="submit"
             disabled={savingProfile}
-            className="mt-6 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="mt-6 inline-flex items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-hover px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
           >
             {savingProfile ? 'Saving…' : 'Save changes'}
           </button>

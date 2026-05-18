@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import AuthShell, {
+  AuthField,
+  authInputClass,
+  authPrimaryButtonClass,
+} from '../components/AuthShell'
 import { ApiError, api } from '../lib/api'
 import { selectIsAuthenticated, useAuthStore } from '../store/auth'
 import type { ApiResponse, ResetPasswordRequest } from '../types'
@@ -19,18 +24,17 @@ export default function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-sm">
-          <h1 className="text-2xl font-bold text-gray-900">Invalid link</h1>
-          <p className="mt-2 text-sm text-gray-500">This reset link is missing or malformed.</p>
-          <Link
-            to="/forgot-password"
-            className="mt-6 inline-block text-sm text-blue-600 hover:underline"
-          >
+      <AuthShell
+        title="Invalid link"
+        subtitle="This reset link is missing or malformed."
+        footer={
+          <Link to="/forgot-password" className="font-medium text-primary hover:underline">
             Request a new link
           </Link>
-        </div>
-      </div>
+        }
+      >
+        <div />
+      </AuthShell>
     )
   }
 
@@ -58,13 +62,9 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-50">
-      <form onSubmit={onSubmit} className="w-full max-w-sm rounded-xl bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900">Set a new password</h1>
-        <p className="mt-1 text-sm text-gray-500">Enter your new password below.</p>
-
-        <label className="mt-6 block text-sm font-medium text-gray-700">
-          New password
+    <AuthShell title="Set a new password" subtitle="Enter your new password below.">
+      <form onSubmit={onSubmit} className="space-y-4">
+        <AuthField label="New password">
           <input
             type="password"
             value={password}
@@ -73,12 +73,11 @@ export default function ResetPasswordPage() {
             minLength={8}
             maxLength={128}
             autoComplete="new-password"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            className={authInputClass}
           />
-        </label>
+        </AuthField>
 
-        <label className="mt-4 block text-sm font-medium text-gray-700">
-          Confirm new password
+        <AuthField label="Confirm new password">
           <input
             type="password"
             value={confirmPassword}
@@ -87,20 +86,20 @@ export default function ResetPasswordPage() {
             minLength={8}
             maxLength={128}
             autoComplete="new-password"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            className={authInputClass}
           />
-        </label>
+        </AuthField>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error}
+          </div>
+        )}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="mt-6 w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-        >
+        <button type="submit" disabled={submitting} className={authPrimaryButtonClass}>
           {submitting ? 'Saving…' : 'Reset password'}
         </button>
       </form>
-    </div>
+    </AuthShell>
   )
 }

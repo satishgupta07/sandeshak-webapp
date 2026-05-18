@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
+import AuthShell, {
+  AuthField,
+  authInputClass,
+  authPrimaryButtonClass,
+} from '../components/AuthShell'
 import { ApiError, api } from '../lib/api'
 import { selectIsAuthenticated, useAuthStore } from '../store/auth'
 import type { ApiResponse, ForgotPasswordRequest } from '../types'
@@ -33,55 +38,70 @@ export default function ForgotPasswordPage() {
     }
   }
 
-  return (
-    <div className="flex h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-sm">
-        {submitted ? (
-          <>
-            <h1 className="text-2xl font-bold text-gray-900">Check your email</h1>
-            <p className="mt-2 text-sm text-gray-500">
-              If an account exists for <span className="font-medium">{email}</span>, we sent a reset
-              link. The link expires in 1 hour.
-            </p>
-            <Link to="/login" className="mt-6 inline-block text-sm text-blue-600 hover:underline">
-              Back to sign in
-            </Link>
-          </>
-        ) : (
-          <form onSubmit={onSubmit}>
-            <h1 className="text-2xl font-bold text-gray-900">Forgot your password?</h1>
-            <p className="mt-1 text-sm text-gray-500">We&apos;ll email you a link to reset it.</p>
-
-            <label className="mt-6 block text-sm font-medium text-gray-700">
-              Email
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              />
-            </label>
-
-            {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="mt-6 w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+  if (submitted) {
+    return (
+      <AuthShell
+        title="Check your email"
+        subtitle={`If an account exists for ${email}, we sent a reset link. It expires in 1 hour.`}
+        footer={
+          <Link to="/login" className="font-medium text-primary hover:underline">
+            ← Back to sign in
+          </Link>
+        }
+      >
+        <div className="flex justify-center py-2">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-success/15 text-success">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-7 w-7"
             >
-              {submitting ? 'Sending…' : 'Send reset link'}
-            </button>
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+          </span>
+        </div>
+      </AuthShell>
+    )
+  }
 
-            <p className="mt-4 text-center text-sm text-gray-500">
-              <Link to="/login" className="text-blue-600 hover:underline">
-                Back to sign in
-              </Link>
-            </p>
-          </form>
+  return (
+    <AuthShell
+      title="Forgot password?"
+      subtitle="We'll email you a link to reset it."
+      footer={
+        <Link to="/login" className="font-medium text-primary hover:underline">
+          ← Back to sign in
+        </Link>
+      }
+    >
+      <form onSubmit={onSubmit} className="space-y-4">
+        <AuthField label="Email">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            className={authInputClass}
+          />
+        </AuthField>
+
+        {error && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error}
+          </div>
         )}
-      </div>
-    </div>
+
+        <button type="submit" disabled={submitting} className={authPrimaryButtonClass}>
+          {submitting ? 'Sending…' : 'Send reset link'}
+        </button>
+      </form>
+    </AuthShell>
   )
 }

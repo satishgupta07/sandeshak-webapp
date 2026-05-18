@@ -103,61 +103,101 @@ export default function UserSearch() {
   const showResultsPane = debouncedQuery.length > 0
 
   return (
-    <div className="border-b border-gray-100">
-      <div className="p-4">
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name or email"
-          maxLength={100}
-          className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-        />
+    <div className="border-b border-border">
+      <div className="px-4 py-3">
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 transition focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/25">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4 shrink-0 text-muted-foreground"
+            aria-hidden
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name or email"
+            maxLength={100}
+            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              aria-label="Clear search"
+              className="rounded-full p-0.5 text-muted-foreground transition hover:bg-surface-hover hover:text-foreground"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {showResultsPane && (
-        <div className="px-4 pb-4">
-          {error && <p className="text-sm text-red-600">{error}</p>}
+        <div className="border-t border-border bg-surface-2/30 px-3 pt-2 pb-3">
+          {error && <p className="px-2 text-sm text-destructive">{error}</p>}
 
           {!error && loading && results.length === 0 && (
-            <p className="text-sm text-gray-400">Searching…</p>
+            <p className="px-2 text-sm text-muted-foreground">Searching…</p>
           )}
 
           {!error && !loading && results.length === 0 && (
-            <p className="text-sm text-gray-400">No users found.</p>
+            <p className="px-2 text-sm text-muted-foreground">No users found.</p>
           )}
 
           {results.length > 0 && (
             <>
-              <p className="text-xs text-gray-400">
+              <p className="px-2 text-[11px] tracking-wide text-muted-foreground uppercase">
                 {total === 1 ? '1 result' : `${total} results`}
               </p>
-              <ul className="mt-2 space-y-1">
+              <ul className="mt-1 space-y-0.5">
                 {results.map((u) => (
                   <li key={u.id}>
                     <button
                       type="button"
                       onClick={() => onStartConversation(u)}
                       disabled={startingId !== null}
-                      className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left hover:bg-gray-50 disabled:opacity-50"
+                      className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition hover:bg-surface-hover disabled:opacity-50"
                     >
                       {u.avatarUrl ? (
                         <img
                           src={u.avatarUrl}
                           alt={u.name}
-                          className="h-8 w-8 rounded-full object-cover"
+                          className="h-9 w-9 rounded-full object-cover ring-2 ring-border"
                         />
                       ) : (
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-xs font-medium text-gray-600">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-hover text-xs font-semibold text-primary-foreground">
                           {u.name.charAt(0).toUpperCase()}
                         </span>
                       )}
                       <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-sm font-medium text-gray-900">{u.name}</span>
-                        <span className="truncate text-xs text-gray-500">{u.email}</span>
+                        <span className="truncate text-sm font-medium text-foreground">
+                          {u.name}
+                        </span>
+                        <span className="truncate text-xs text-muted-foreground">{u.email}</span>
                       </span>
                       {startingId === u.id && (
-                        <span className="ml-2 text-xs text-gray-400">Starting…</span>
+                        <span className="ml-2 text-xs text-muted-foreground">Starting…</span>
                       )}
                     </button>
                   </li>
@@ -169,12 +209,12 @@ export default function UserSearch() {
                   type="button"
                   onClick={onLoadMore}
                   disabled={loading}
-                  className="mt-3 text-sm text-blue-600 hover:underline disabled:opacity-50"
+                  className="mt-2 w-full rounded-lg py-2 text-sm font-medium text-primary transition hover:bg-surface-hover disabled:opacity-50"
                 >
                   {loading ? 'Loading…' : 'Load more'}
                 </button>
               )}
-              {startError && <p className="mt-2 text-sm text-red-600">{startError}</p>}
+              {startError && <p className="mt-2 px-2 text-sm text-destructive">{startError}</p>}
             </>
           )}
         </div>
