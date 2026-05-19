@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import ChatWindow from '../components/ChatWindow'
 import ConversationList from '../components/ConversationList'
@@ -17,6 +18,35 @@ export default function ChatPage() {
 
   useChatSocket()
 
+  // Track the visual viewport height so the chat layout shrinks when the
+  // on-screen keyboard opens on iOS Safari (which doesn't honor the
+  // `interactive-widget=resizes-content` viewport meta). Locking body
+  // overflow prevents Safari from scrolling the header off-screen while it
+  // tries to bring the focused input into view.
+  useEffect(() => {
+    const vv = window.visualViewport
+    const root = document.documentElement
+    const prevBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    if (!vv) {
+      return () => {
+        document.body.style.overflow = prevBodyOverflow
+      }
+    }
+    const apply = () => {
+      root.style.setProperty('--app-height', `${vv.height}px`)
+    }
+    apply()
+    vv.addEventListener('resize', apply)
+    vv.addEventListener('scroll', apply)
+    return () => {
+      vv.removeEventListener('resize', apply)
+      vv.removeEventListener('scroll', apply)
+      root.style.removeProperty('--app-height')
+      document.body.style.overflow = prevBodyOverflow
+    }
+  }, [])
+
   async function onLogout() {
     if (refreshToken) {
       api('/auth/logout', {
@@ -30,7 +60,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-background">
+    <div className="flex flex-col bg-background" style={{ height: 'var(--app-height, 100dvh)' }}>
       {user && !user.isVerified && (
         <div className="border-b border-border bg-warning/10 px-4 py-2 text-center text-xs text-warning sm:text-sm">
           Your email isn&apos;t verified.{' '}
